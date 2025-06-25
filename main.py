@@ -1,17 +1,26 @@
 from scapy.all import *
 import sys
 
+ROUTER_MAC = "08:00:27:e9:7f:bd"
+DST_MAC = "08:00:27:d0:a2:e2"
+
 def sniff_leg(src_leg: str) -> Packet:
     print("Sniffing one packet")
-    leg_sniff = sniff(session=TCPSession, prn=lambda x: x.summary(), store=True, iface=src_leg, count=1)
+    #store will save the packet and not dispose it
+    #iface specifies the leg
+    #count specifies the number of packets sniff accepts
+    leg_sniff = sniff(store=True, iface=src_leg, count=1)
     return leg_sniff[0]
 
 def send_message(dst_leg: str, packet: Packet) -> None:
-    send(packet, iface=dst_leg)
-
+    packet.src = ROUTER_MAC
+    packet.dst = DST_MAC
+    prevTTL = (packet/IP()).ttl
+    sendp(packet/IP(ttl=prevTTL), iface=dst_leg)
 def sniffer(src_leg: str, dst_leg: str) -> None:
     while True:
-        send_message(dst_leg, sniff_leg(src_leg))
+        packet = sniff_leg(src_leg)
+        send_message(dst_leg, packet)
 
 def main() -> None:
     if len(sys.argv) != 3:
