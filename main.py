@@ -13,9 +13,11 @@ def sniff_leg(src_leg: str) -> Packet:
     return leg_sniff[0]
 
 def send_message(dst_leg: str, packet: Packet) -> None:
+    print(type(packet))
     packet.src = ROUTER_MAC
     packet.dst = DST_MAC
-    prevTTL = (packet/IP()).ttl
+    #packet.show()
+    prevTTL = (packet/IP()).ttl - 1
     sendp(packet/IP(ttl=prevTTL), iface=dst_leg)
 def sniffer(src_leg: str, dst_leg: str) -> None:
     while True:
