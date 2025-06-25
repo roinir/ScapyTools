@@ -4,6 +4,9 @@ import sys
 ROUTER_MAC = "08:00:27:e9:7f:bd"
 DST_MAC = "08:00:27:d0:a2:e2"
 FAKE_IP_ADDR = "122.122.122.122"
+OUTSIDE_LEG = "08:00:27:bf:84:a6"
+INSIDE_LEG = "08:00:27:e9:7f:bd"
+NAT_TABLE = {} #will be a dict of int for key and tuple for value - port_dst : (src_ip, ip_dst)
 
 def sniff_leg(src_leg: str) -> Packet:
     print("Sniffing one packet")
@@ -14,14 +17,15 @@ def sniff_leg(src_leg: str) -> Packet:
     return leg_sniff[0]
 
 def send_message(dst_leg: str, packet: Packet) -> None:
-    print(type(packet))
     packet.src = ROUTER_MAC
     packet.dst = DST_MAC
-    #packet.show()
     prevTTL = (packet/IP()).ttl - 1
     new_packet = packet/IP(ttl=prevTTL, src=FAKE_IP_ADDR)
     sendp(new_packet, iface=dst_leg)
     print(new_packet)
+    new_packet.show()
+    print(new_packet.port) 
+
 def sniffer(src_leg: str, dst_leg: str) -> None:
     while True:
         packet = sniff_leg(src_leg)
