@@ -3,6 +3,7 @@ import sys
 
 ROUTER_MAC = "08:00:27:e9:7f:bd"
 DST_MAC = "08:00:27:d0:a2:e2"
+FAKE_IP_ADDR = "122.122.122.122"
 
 def sniff_leg(src_leg: str) -> Packet:
     print("Sniffing one packet")
@@ -18,7 +19,9 @@ def send_message(dst_leg: str, packet: Packet) -> None:
     packet.dst = DST_MAC
     #packet.show()
     prevTTL = (packet/IP()).ttl - 1
-    sendp(packet/IP(ttl=prevTTL), iface=dst_leg)
+    new_packet = packet/IP(ttl=prevTTL, src=FAKE_IP_ADDR)
+    sendp(new_packet, iface=dst_leg)
+    print(new_packet)
 def sniffer(src_leg: str, dst_leg: str) -> None:
     while True:
         packet = sniff_leg(src_leg)
