@@ -1,0 +1,42 @@
+from scapy.all import *
+import sys
+
+ROUTER_MAC = "08:00:27:e9:7f:bd"
+DST_MAC = "08:00:27:d0:a2:e2"
+FAKE_IP_ADDR = "122.122.122.122"
+OUTSIDE_LEG = "08:00:27:bf:84:a6"
+INSIDE_LEG = "08:00:27:e9:7f:bd"
+NAT_TABLE = {} #will be a dict of int for key and tuple for value - port_dst : (src_ip, ip_dst)
+
+def sniff_leg(src_leg: str) -> Packet:
+    print("Sniffing one packet")
+    #store will save the packet and not dispose it
+    #iface specifies the leg
+    #count specifies the number of packets sniff accepts
+    leg_sniff = sniff(store=True, iface=src_leg, count=1)
+    return leg_sniff[0]
+
+def send_message(dst_leg: str, packet: Packet) -> None:
+    packet.src = ROUTER_MAC
+    packet.dst = DST_MAC
+    prevTTL = (packet/IP()).ttl - 1
+    new_packet = packet/IP(ttl=prevTTL, src=FAKE_IP_ADDR)
+    sendp(new_packet, iface=dst_leg)
+    print(new_packet)
+    new_packet.show()
+    print(new_packet.port) 
+
+def sniffer(src_leg: str, dst_leg: str) -> None:
+    while True:
+        packet = sniff_leg(src_leg)
+        send_message(dst_leg, packet)
+
+def main() -> None:
+    if len(sys.argv) != 3:
+        print("Sorry, those arguments are not allowed")
+        return
+    #send_message("enp0s3", sniff_leg("enp0s8"))
+    sniffer(sys.argv[1], sys.argv[2])
+
+if __name__ == "__main__":
+    main()
